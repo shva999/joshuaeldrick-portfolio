@@ -307,7 +307,7 @@ body.welcome-active {
   align-items: center;
   justify-content: center;
   line-height: 0;
-  gap: 8px;
+
   font-family: var(--font-mono);
   font-size: 12.5px;
   color: var(--text);
@@ -1705,12 +1705,12 @@ footer {
     background: rgba(10, 9, 13, .96);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 10px;
+    padding: 15px;
     backdrop-filter: blur(20px);
     transform: translateY(-14px) scale(.98);
-    opacity: 0;
+    opacity:0;
     pointer-events: none;
-    transition: all .5s var(--ease-slow);
+    transition: all 1s var(--ease-slow);
   }
 
   .nav-links a {
@@ -1719,13 +1719,14 @@ footer {
   }
 
   .nav-links a::after {
-    bottom: 2px;
+    bottom: 11px;
   }
 
   .nav-links.open {
     transform: none;
     opacity: 1;
     pointer-events: auto;
+
   }
 
   .nav-toggle {
