@@ -1597,6 +1597,7 @@ footer {
     gap: 52px;
     padding: 0 24px;
     padding-top: 20px;
+    padding-bottom: 96px;
     text-align: center;
   }
 
@@ -1626,6 +1627,7 @@ footer {
 
   .scroll-cue {
     left: 50%;
+    bottom: 16px;
     transform: translateX(-50%);
   }
 
@@ -1772,7 +1774,7 @@ footer {
 
   .hero-layout {
     gap: 38px;
-    padding: 14px 18px 72px;
+    padding: 14px 18px 96px;
   }
 
   .hero h1 {
