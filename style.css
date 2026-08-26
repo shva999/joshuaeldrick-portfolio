@@ -305,6 +305,8 @@ body.welcome-active {
 .btn-github {
   display: flex;
   align-items: center;
+  justify-content: center;
+  line-height: 0;
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -320,6 +322,8 @@ body.welcome-active {
 .btn-github svg {
   width: 15px;
   height: 15px;
+  display: block;
+  flex: 0 0 auto;
   transition: transform .5s var(--ease-slow);
 }
 
@@ -344,7 +348,12 @@ body.welcome-active {
   color: var(--text);
   align-items: center;
   justify-content: center;
+  line-height: 0;
   cursor: pointer;
+}
+
+.nav-toggle svg {
+  display: block;
 }
 
 /* ---------- HERO ---------- */
@@ -1692,7 +1701,7 @@ footer {
     left: 20px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    gap: 6px;
     background: rgba(10, 9, 13, .96);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -1706,7 +1715,11 @@ footer {
 
   .nav-links a {
     width: 100%;
-    padding: 12px 10px;
+    padding: 12px 10px 14px;
+  }
+
+  .nav-links a::after {
+    bottom: 2px;
   }
 
   .nav-links.open {
