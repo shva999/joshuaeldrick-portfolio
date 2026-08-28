@@ -332,7 +332,7 @@ tiltRAF = requestAnimationFrame(animateTilt);
     var dialogCopy = document.getElementById('certDialogCopy');
     var dialogFocus = document.getElementById('certDialogFocus');
     var dialogMark = document.getElementById('certDialogMark');
-    var dialogPdf = document.getElementById('certDialogPdf');
+    var dialogImage = document.getElementById('certDialogImage');
     var dialogOpen = document.getElementById('certDialogOpen');
 
     function closeCertDialog(){
@@ -350,8 +350,8 @@ tiltRAF = requestAnimationFrame(animateTilt);
         dialogCopy.textContent = card.dataset.certCopy;
         dialogFocus.textContent = card.dataset.certFocus;
         dialogMark.textContent = card.dataset.certMark;
-        dialogPdf.src = card.dataset.certPdf;
-        dialogOpen.href = card.dataset.certPdf;
+        dialogImage.src = card.dataset.certPng;
+        dialogOpen.href = card.dataset.certPng;
         certDialog.hidden = false;
         document.body.classList.add('cert-dialog-open');
         card.setAttribute('aria-expanded', 'true');
@@ -398,22 +398,46 @@ tiltRAF = requestAnimationFrame(animateTilt);
     });
   });
 
-  /* ---------- ACTIVE NAV LINK ON SCROLL ---------- */
-  var navSections = ['home','about','portfolio','contact'];
-  var navLinks2 = {};
-  navSections.forEach(function(id){ navLinks2[id] = document.getElementById('nav-' + id); });
-  function updateActiveNav(){
-    var scrollY = window.scrollY + 140;
-    var active  = 'home';
-    navSections.forEach(function(id){
-      var el = document.getElementById(id);
-      if(el && el.offsetTop <= scrollY) active = id;
-    });
-    navSections.forEach(function(id){
-      if(navLinks2[id]) navLinks2[id].classList.toggle('nav-active', id === active);
-    });
-  }
-  window.addEventListener('scroll', updateActiveNav, {passive:true});
-  updateActiveNav();
+/* ---------- ACTIVE NAV LINK ON SCROLL ---------- */
+var navSections = ['home', 'about', 'portfolio', 'contact'];
+var navLinks2 = {};
 
+navSections.forEach(function(id) {
+  navLinks2[id] = document.getElementById('nav-' + id);
+});
+
+function updateActiveNav() {
+  // Check a point around the upper-middle portion of the viewport
+  var checkPosition = window.scrollY + (window.innerHeight * 0.35);
+  var active = 'home';
+
+  navSections.forEach(function(id) {
+    var section = document.getElementById(id);
+
+    if (!section) return;
+
+    var sectionTop = section.offsetTop;
+    var sectionBottom = sectionTop + section.offsetHeight;
+
+    if (
+      checkPosition >= sectionTop &&
+      checkPosition < sectionBottom
+    ) {
+      active = id;
+    }
+  });
+
+  navSections.forEach(function(id) {
+    if (navLinks2[id]) {
+      navLinks2[id].classList.toggle(
+        'nav-active',
+        id === active
+      );
+    }
+  });
+}
+
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+window.addEventListener('resize', updateActiveNav);
+updateActiveNav();
 })();
