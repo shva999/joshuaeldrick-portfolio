@@ -322,6 +322,73 @@ tiltRAF = requestAnimationFrame(animateTilt);
     });
   });
 
+  /* ---------- CERTIFICATION WINDOWS ---------- */
+  var certDialog = document.getElementById('certDialog');
+  var certCards = document.querySelectorAll('.cert-window');
+  var certOrigin = null;
+  if(certDialog && certCards.length){
+    var dialogTitle = document.getElementById('certDialogTitle');
+    var dialogLabel = document.getElementById('certDialogLabel');
+    var dialogCopy = document.getElementById('certDialogCopy');
+    var dialogFocus = document.getElementById('certDialogFocus');
+    var dialogMark = document.getElementById('certDialogMark');
+    var dialogPdf = document.getElementById('certDialogPdf');
+    var dialogOpen = document.getElementById('certDialogOpen');
+
+    function closeCertDialog(){
+      certDialog.hidden = true;
+      document.body.classList.remove('cert-dialog-open');
+      certCards.forEach(function(card){ card.setAttribute('aria-expanded', 'false'); });
+      if(certOrigin) certOrigin.focus();
+    }
+
+    certCards.forEach(function(card){
+      card.addEventListener('click', function(){
+        certOrigin = card;
+        dialogTitle.textContent = card.dataset.certTitle;
+        dialogLabel.textContent = 'certificate_' + card.dataset.certMark;
+        dialogCopy.textContent = card.dataset.certCopy;
+        dialogFocus.textContent = card.dataset.certFocus;
+        dialogMark.textContent = card.dataset.certMark;
+        dialogPdf.src = card.dataset.certPdf;
+        dialogOpen.href = card.dataset.certPdf;
+        certDialog.hidden = false;
+        document.body.classList.add('cert-dialog-open');
+        card.setAttribute('aria-expanded', 'true');
+        certDialog.querySelector('button[data-cert-close]').focus();
+      });
+    });
+
+    certDialog.querySelectorAll('[data-cert-close]').forEach(function(closeButton){
+      closeButton.addEventListener('click', closeCertDialog);
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && !certDialog.hidden) closeCertDialog();
+    });
+  }
+
+  /* ---------- CONTACT MAILTO FORM ---------- */
+  var contactForm = document.getElementById('contactForm');
+  if(contactForm){
+    var contactMessage = document.getElementById('contactMessage');
+    var contactCount = document.getElementById('contactCount');
+    var contactPrompt = document.getElementById('contactPrompt');
+    contactMessage.addEventListener('input', function(){
+      contactCount.value = contactMessage.value.length;
+      contactPrompt.textContent = contactMessage.value.length > 0 ? 'Looks good. Ready when you are.' : 'I usually reply within 24 hours.';
+    });
+    contactForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = document.getElementById('contactName').value.trim();
+      var comment = document.getElementById('contactMessage').value.trim();
+      var subject = 'Portfolio message from ' + name;
+      var body = 'Name: ' + name + '\n\nComment:\n' + comment;
+      var mailto = 'mailto:joshuaeldrick@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      document.getElementById('contactFormStatus').textContent = 'Opening your email app...';
+      window.location.href = mailto;
+    });
+  }
+
   /* ---------- PROJECT CARD CURSOR GLOW ---------- */
   document.querySelectorAll('.project-card').forEach(function(card){
     card.addEventListener('mousemove', function(e){
