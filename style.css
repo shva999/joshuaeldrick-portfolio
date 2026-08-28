@@ -1986,7 +1986,7 @@ footer {
 .cert-dialog-window { max-height: calc(100vh - 32px); overflow-y: auto; }
 .cert-dialog-window .cert-window-bar button { padding: 0; border: 0; color: var(--text-dim); background: transparent; font: 20px var(--font-body); cursor: pointer; }
 .cert-dialog-content { padding: 42px; }
-.cert-dialog-pdf { display: block; width: 100%; height: min(280px, 36vh); min-height: 170px; margin: 22px 0 4px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.cert-dialog-image { display: block; width: 100%; height: min(280px, 36vh); min-height: 170px; margin: 22px 0 4px; border: 1px solid var(--border); border-radius: 8px; background: #fff; object-fit: contain; }
 .cert-dialog-content .eyebrow { margin: 28px 0 14px; }
 .cert-dialog-content h3 { font-size: clamp(1.8rem, 5vw, 2.8rem); }
 .cert-dialog-content p { max-width: 430px; margin-top: 16px; color: var(--text-dim); }
@@ -2008,7 +2008,7 @@ footer {
   .cert-dialog { width: 100%; padding: 16px; }
   .cert-dialog-window { width: calc(100vw - 32px); max-width: calc(100vw - 32px); }
   .cert-dialog-content { padding: 24px 18px; }
-  .cert-dialog-pdf { height: 34vh; min-height: 150px; margin-top: 16px; }
+  .cert-dialog-image { height: 34vh; min-height: 150px; margin-top: 16px; }
   .cert-dialog-content .eyebrow { margin-top: 20px; }
   .cert-dialog-focus { align-items: flex-start; flex-direction: column; gap: 8px; }
   .cert-dialog-focus strong { text-align: left; }
