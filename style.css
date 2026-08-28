@@ -1395,23 +1395,61 @@ body.welcome-active {
   background: var(--violet);
 }
 
+/* Technology tags */
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .tag {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  transition: all 1s var(--ease-slow);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+
+  padding: 10px 15px;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
+
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.07);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Real technology logos */
+.tag i {
+  font-size: 1.45rem;
+  width: 25px;
+  height: 25px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+/* Keep Devicon colors visible */
+.tag i.colored {
+  filter: brightness(1.15) saturate(1.1);
+}
+
+/* Hover */
+.tag:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
 .stack-grid .tag {
@@ -1452,8 +1490,14 @@ body.welcome-active {
 .tag-icon-node { background: #83cd29; }
 .tag-icon-python { background: #ffd343; }
 .tag-icon-api { background: #c4b5fd; }
+.tag-icon-php { background: #777bb4; color: #fff; }
+.tag-icon-java { background: #ed1d25; color: #fff; }
+.tag-icon-react-native { background: #20232a; color: #61dafb; }
 .tag-icon-graphql { background: #e10098; color: #fff; }
 .tag-icon-rest { background: #8b5cf6; color: #fff; }
+.tag-icon-mysql { background: #f29111; color: #fff; }
+.tag-icon-sqlite { background: #0f80cc; color: #fff; }
+.tag-icon-phpmyadmin { background: #6c78af; color: #fff; }
 .tag-icon-postgres { background: #699eca; color: #fff; }
 .tag-icon-redis { background: #dc382d; color: #fff; }
 .tag-icon-docker { background: #2496ed; color: #fff; }
@@ -1484,6 +1528,47 @@ body.welcome-active {
 .contact-inner .eyebrow {
   justify-content: center;
 }
+
+.contact-form {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  text-align: left;
+}
+
+.contact-form label {
+  color: var(--text-dim);
+  font: 11px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: 0;
+  resize: vertical;
+  color: var(--text);
+  background: var(--surface);
+  font: 14px var(--font-body);
+  transition: border-color .35s var(--ease-slow), box-shadow .35s var(--ease-slow);
+}
+
+.contact-form textarea,
+.contact-form button,
+.contact-form-status { grid-column: 1 / -1; }
+.contact-form textarea { min-height: 130px; }
+.contact-form input:focus,
+.contact-form textarea:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(139, 92, 246, .12); }
+.contact-form input::placeholder,
+.contact-form textarea::placeholder { color: var(--text-faint); }
+.contact-form button { justify-self: center; margin-top: 8px; }
+.contact-form-status { min-height: 20px; margin: 0; color: var(--violet-bright); text-align: center; font: 11px var(--font-mono); }
 
 .big-email {
   font-family: var(--font-display);
@@ -1836,4 +1921,100 @@ footer {
     flex-wrap: wrap;
     gap: 20px;
   }
+}
+
+/* ---------- CERTIFICATION WINDOWS ---------- */
+.cert-window-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.cert-window {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  color: var(--text);
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .5s var(--ease-slow), border-color .5s var(--ease-slow), box-shadow .5s var(--ease-slow);
+}
+
+.cert-window:hover,
+.cert-window[aria-expanded="true"] {
+  transform: translateY(-7px);
+  border-color: var(--cert-accent);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .35), 0 0 28px var(--cert-glow);
+}
+
+.cert-window-amber { --cert-accent: #f4b860; --cert-glow: rgba(244, 184, 96, .16); }
+.cert-window-cyan { --cert-accent: #61d4d9; --cert-glow: rgba(97, 212, 217, .14); }
+.cert-window-pink { --cert-accent: #ef8eb6; --cert-glow: rgba(239, 142, 182, .14); }
+
+.cert-window-bar {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--text-faint);
+  font: 10px var(--font-mono);
+  background: rgba(255, 255, 255, .035);
+  border-bottom: 1px solid var(--border);
+}
+
+.window-dots { display: flex; gap: 4px; }
+.window-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--cert-accent, var(--violet)); opacity: .7; }
+
+.cert-window-body { display: flex; min-height: 220px; flex-direction: column; align-items: flex-start; padding: 25px; }
+.cert-number, .cert-dialog-mark { color: var(--cert-accent, var(--violet)); font: 12px var(--font-mono); }
+.cert-window-body strong { margin-top: auto; max-width: 100%; overflow-wrap: anywhere; font: 600 1.35rem/1.1 var(--font-display); }
+.cert-window-body small { margin-top: 10px; color: var(--text-dim); font: 11px var(--font-mono); }
+.cert-window-body em { margin-top: 26px; color: var(--cert-accent); font: normal 11px var(--font-mono); }
+
+.cert-dialog[hidden] { display: none; }
+.cert-dialog { position: fixed; inset: 0; z-index: 180; display: grid; place-items: center; padding: 24px; }
+.cert-dialog-backdrop { position: absolute; inset: 0; background: rgba(3, 3, 4, .78); backdrop-filter: blur(10px); }
+.cert-dialog-window { position: relative; width: min(540px, calc(100vw - 32px)); max-width: calc(100vw - 32px); border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); box-shadow: 0 28px 80px rgba(0, 0, 0, .6); animation: certDialogIn .45s var(--ease-slow) both; }
+.cert-dialog-window { max-height: calc(100vh - 32px); overflow-y: auto; }
+.cert-dialog-window .cert-window-bar button { padding: 0; border: 0; color: var(--text-dim); background: transparent; font: 20px var(--font-body); cursor: pointer; }
+.cert-dialog-content { padding: 42px; }
+.cert-dialog-pdf { display: block; width: 100%; height: min(280px, 36vh); min-height: 170px; margin: 22px 0 4px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.cert-dialog-content .eyebrow { margin: 28px 0 14px; }
+.cert-dialog-content h3 { font-size: clamp(1.8rem, 5vw, 2.8rem); }
+.cert-dialog-content p { max-width: 430px; margin-top: 16px; color: var(--text-dim); }
+.cert-dialog-focus { display: flex; justify-content: space-between; gap: 20px; margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--border); font: 11px var(--font-mono); }
+.cert-dialog-focus span { color: var(--text-faint); text-transform: uppercase; }
+.cert-dialog-focus strong { color: var(--violet-bright); font-weight: 400; text-align: right; }
+.cert-dialog-link { display: inline-flex; gap: 8px; margin-top: 24px; color: var(--violet-bright); font: 11px var(--font-mono); }
+.cert-dialog-link:hover { color: var(--text); }
+.cert-dialog-open { overflow: hidden; }
+
+.contact-form-meta { display: flex; justify-content: space-between; gap: 16px; color: var(--text-faint); font: 11px var(--font-mono); }
+.contact-form-meta output { color: var(--violet-bright); }
+
+@keyframes certDialogIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 760px) {
+  .cert-window-grid { grid-template-columns: 1fr; max-width: 430px; }
+  .cert-window-body { min-height: 160px; }
+  .cert-dialog { width: 100%; padding: 16px; }
+  .cert-dialog-window { width: calc(100vw - 32px); max-width: calc(100vw - 32px); }
+  .cert-dialog-content { padding: 24px 18px; }
+  .cert-dialog-pdf { height: 34vh; min-height: 150px; margin-top: 16px; }
+  .cert-dialog-content .eyebrow { margin-top: 20px; }
+  .cert-dialog-focus { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .cert-dialog-focus strong { text-align: left; }
+  .contact-form { grid-template-columns: 1fr; }
+  .contact-form input,
+  .contact-form textarea,
+  .contact-form button,
+  .contact-form-status { grid-column: 1; }
 }
