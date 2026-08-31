@@ -8,7 +8,7 @@
   function leaveWelcome(){
     welcomeScreen.classList.add('is-leaving');
     document.body.classList.remove('welcome-active');
-    setTimeout(function(){ welcomeScreen.remove(); }, reduceMotion ? 0 : 1000);
+    setTimeout(function(){ welcomeScreen.remove(); }, reduceMotion ? 0 : 1200);
   }
   setTimeout(leaveWelcome, reduceMotion ? 0 : 2400);
 
@@ -149,53 +149,171 @@
     stepParticles();
   }
 
-  /* ---------- ID CARD — 3D TILT + DRAG ---------- */
+  /* ---------- ID CARD — 3D TILT + DRAG + LANYARD PHYSICS ---------- */
   var idCard    = document.getElementById('idCard');
   var idWrapper = document.querySelector('.id-card-wrapper');
+  var idShadow  = idWrapper ? idWrapper.querySelector('.id-shadow') : null;
 
   if(idCard && idWrapper){
+    /* Lanyard Physics variables */
+    var ropeNodes = [];
+    var nodeCount = 13; // odd number, node 6 is center anchor
+    var totalLength = 180; // shorter, balanced lanyard length
+    var segmentLength = totalLength / (nodeCount / 2);
+    var gravity = 0.45;
+    var friction = 0.97;
+    var pivotLeft = { x: 120, y: 18 };
+    var pivotRight = { x: 180, y: 18 };
+
+    /* Drag coordinates state */
+    var dragStartX = 0, dragStartY = 0;
+    var wrapStartX = 0, wrapStartY = 0;
+    var currentX   = 0, currentY  = 0;
+    var velX = 0, velY = 0;
+    var lastX = 0, lastY = 0;
+    var isDragging = false;
+
+    // Initialize rope node positions
+    function initRope() {
+      ropeNodes = [];
+      for (var i = 0; i < nodeCount; i++) {
+        var startX, startY;
+        if (i <= 6) {
+          var fraction = i / 6;
+          startX = pivotLeft.x + (150 - pivotLeft.x) * fraction;
+          startY = pivotLeft.y + (200 - pivotLeft.y) * fraction;
+        } else {
+          var fraction = (i - 6) / 6;
+          startX = 150 + (pivotRight.x - 150) * fraction;
+          startY = 200 + (pivotRight.y - 200) * fraction;
+        }
+        ropeNodes.push({
+          x: startX,
+          y: startY,
+          px: startX,
+          py: startY
+        });
+      }
+    }
+    initRope();
+
+    // Verlet integration rope solver
+    function updateLanyard() {
+      // 1. Verlet integration
+      for (var i = 0; i < nodeCount; i++) {
+        if (i === 0 || i === 6 || i === 12) continue; // skip fixed nodes
+        var n = ropeNodes[i];
+        var vx = (n.x - n.px) * friction;
+        var vy = (n.y - n.py) * friction;
+
+        n.px = n.x;
+        n.py = n.y;
+
+        n.x += vx;
+        n.y += vy + gravity;
+      }
+
+      // 2. Set position of anchor nodes
+      ropeNodes[0].x = pivotLeft.x;
+      ropeNodes[0].y = pivotLeft.y;
+      ropeNodes[12].x = pivotRight.x;
+      ropeNodes[12].y = pivotRight.y;
+      
+      // Node 6 is attached to top-center of card (relative to SVG origin X=150, Y=200)
+      ropeNodes[6].x = 150 + currentX;
+      ropeNodes[6].y = 200 + currentY;
+
+      // 3. Resolve link constraints
+      var iterations = 6;
+      for (var iter = 0; iter < iterations; iter++) {
+        for (var i = 0; i < nodeCount - 1; i++) {
+          var n1 = ropeNodes[i];
+          var n2 = ropeNodes[i+1];
+
+          var dx = n2.x - n1.x;
+          var dy = n2.y - n1.y;
+          var dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist === 0) continue;
+
+          var diff = segmentLength - dist;
+          var percent = (diff / dist) * 0.5;
+          var offsetX = dx * percent;
+          var offsetY = dy * percent;
+
+          if (i !== 0 && i !== 6 && i !== 12) {
+            n1.x -= offsetX;
+            n1.y -= offsetY;
+          }
+          if (i+1 !== 0 && i+1 !== 6 && i+1 !== 12) {
+            n2.x += offsetX;
+            n2.y += offsetY;
+          }
+        }
+      }
+
+      // 4. Update SVG path
+      var pathEl = document.getElementById('lanyardPath');
+      if (pathEl) {
+        var d = "M " + ropeNodes[0].x.toFixed(1) + " " + ropeNodes[0].y.toFixed(1);
+        for (var i = 1; i < nodeCount; i++) {
+          d += " L " + ropeNodes[i].x.toFixed(1) + " " + ropeNodes[i].y.toFixed(1);
+        }
+        pathEl.setAttribute('d', d);
+      }
+    }
+
     /* 3D tilt on mouse hover */
     var tiltTarget = { rx: 0, ry: 0 };
     var tiltCurrent = { rx: 0, ry: 0 };
     var tiltRAF = null;
-    var isDragging = false;
 
     function lerp(a, b, t){ return a + (b - a) * t; }
 
     function animateTilt(){
+      // Smoothly move current rotation toward target
+      tiltCurrent.rx = lerp(tiltCurrent.rx, tiltTarget.rx, 0.08);
+      tiltCurrent.ry = lerp(tiltCurrent.ry, tiltTarget.ry, 0.08);
 
-    // Smoothly move current rotation toward target
-    tiltCurrent.rx = lerp(tiltCurrent.rx, tiltTarget.rx, 0.08);
-    tiltCurrent.ry = lerp(tiltCurrent.ry, tiltTarget.ry, 0.08);
+      var scale = isDragging ? 1.05 : 1.02;
 
-    // The animation loop ALWAYS controls the card transform
-    var scale = isDragging ? 1.05 : 1.02;
+      // Card translation (drag) + tilt
+      idCard.style.transform =
+          'translate3d(' + currentX.toFixed(2) + 'px,' + currentY.toFixed(2) + 'px, 0) ' +
+          'perspective(700px) ' +
+          'rotateX(' + tiltCurrent.rx + 'deg) ' +
+          'rotateY(' + tiltCurrent.ry + 'deg) ' +
+          'scale3d(' + scale + ',' + scale + ',' + scale + ')';
 
-    idCard.style.transform =
-        'perspective(700px) ' +
-        'rotateX(' + tiltCurrent.rx + 'deg) ' +
-        'rotateY(' + tiltCurrent.ry + 'deg) ' +
-        'scale3d(' + scale + ',' + scale + ',' + scale + ')';
+      // Drag shadow displacement and scaling
+      if (idShadow) {
+        idShadow.style.transform =
+            'translate3d(' + currentX.toFixed(2) + 'px, ' + (currentY * 0.15).toFixed(2) + 'px, 0) ' +
+            'scale(' + (1 - Math.abs(currentY)/600).toFixed(3) + ')';
+        idShadow.style.opacity = (isDragging ? 0.15 : 0.28) * (1 - Math.min(Math.abs(currentY)/300, 0.5));
+      }
 
-    // Holographic sheen
-    var holoEl = idCard.querySelector('.id-holo');
+      // Holographic sheen
+      var holoEl = idCard.querySelector('.id-holo');
 
-    if(holoEl){
-        var xPct = (tiltCurrent.ry / 22 + 0.5) * 100;
-        var yPct = (-tiltCurrent.rx / 18 + 0.5) * 100;
+      if(holoEl){
+          var xPct = (tiltCurrent.ry / 22 + 0.5) * 100;
+          var yPct = (-tiltCurrent.rx / 18 + 0.5) * 100;
 
-        holoEl.style.background =
-            'radial-gradient(circle at ' +
-            xPct + '% ' + yPct + '%, ' +
-            'rgba(196,181,253,0.18) 0%, ' +
-            'rgba(139,92,246,0.08) 40%, ' +
-            'transparent 70%)';
+          holoEl.style.background =
+              'radial-gradient(circle at ' +
+              xPct + '% ' + yPct + '%, ' +
+              'rgba(196,181,253,0.18) 0%, ' +
+              'rgba(139,92,246,0.08) 40%, ' +
+              'transparent 70%)';
+      }
+
+      // Update physics for lanyard rope
+      updateLanyard();
+
+      tiltRAF = requestAnimationFrame(animateTilt);
     }
 
     tiltRAF = requestAnimationFrame(animateTilt);
-}
-
-tiltRAF = requestAnimationFrame(animateTilt);
 
     idCard.addEventListener('mousemove', function(e){
       if(isDragging) return;
@@ -209,21 +327,7 @@ tiltRAF = requestAnimationFrame(animateTilt);
       if(!isDragging){ tiltTarget.rx = 0; tiltTarget.ry = 0; }
     });
 
-    /* Drag to move */
-    var dragStartX = 0, dragStartY = 0;
-    var wrapStartX = 0, wrapStartY = 0;
-    var currentX   = 0, currentY  = 0;
-    var velX = 0, velY = 0;
-    var lastX = 0, lastY = 0;
-
-    function getOffsets(el){
-      var s = window.getComputedStyle(el);
-      return {
-        x: parseFloat(s.getPropertyValue('--drag-x') || 0) || 0,
-        y: parseFloat(s.getPropertyValue('--drag-y') || 0) || 0
-      };
-    }
-
+    /* Drag handlers */
     idCard.addEventListener('mousedown', function(e){
       e.preventDefault();
       isDragging = true;
@@ -235,49 +339,43 @@ tiltRAF = requestAnimationFrame(animateTilt);
     });
 
     window.addEventListener('mousemove', function(e){
-    if(!isDragging) return;
+      if(!isDragging) return;
 
-    velX = e.clientX - lastX;
-    velY = e.clientY - lastY;
+      velX = e.clientX - lastX;
+      velY = e.clientY - lastY;
 
-    lastX = e.clientX;
-    lastY = e.clientY;
+      lastX = e.clientX;
+      lastY = e.clientY;
 
-    currentX = wrapStartX + (e.clientX - dragStartX);
-    currentY = wrapStartY + (e.clientY - dragStartY);
+      // Clamp drag boundaries relative to initial position
+      currentX = Math.max(-180, Math.min(180, wrapStartX + (e.clientX - dragStartX)));
+      currentY = Math.max(-150, Math.min(200, wrapStartY + (e.clientY - dragStartY)));
 
-    idWrapper.style.transform =
-        'translate(' + currentX + 'px,' + currentY + 'px)';
+      tiltTarget.ry = velX * 2.5;
+      tiltTarget.rx = -velY * 2.5;
+    });
 
-    // Only update the target.
-    // animateTilt() handles the actual rotation.
-    tiltTarget.ry = velX * 2.5;
-    tiltTarget.rx = -velY * 2.5;
-});
-
-    window.addEventListener('mouseup', function(){
+    function handleRelease(){
       if(!isDragging) return;
       isDragging = false;
       idCard.classList.remove('dragging');
-      // Momentum + snap back with spring
-      var momentum = { x: velX * 4, y: velY * 4 };
-      var targetX = currentX + momentum.x;
-      var targetY = currentY + momentum.y;
-      // Snap back to origin
+      tiltTarget.rx = 0; tiltTarget.ry = 0;
+      
+      // Momentum-based snap back with spring physics
       function springBack(){
+        if (isDragging) return;
         currentX = lerp(currentX, 0, 0.09);
         currentY = lerp(currentY, 0, 0.09);
-        idWrapper.style.transform = 'translate(' + currentX.toFixed(2) + 'px,' + currentY.toFixed(2) + 'px)';
-        if(Math.abs(currentX) > 0.5 || Math.abs(currentY) > 0.5){
+        if(Math.abs(currentX) > 0.1 || Math.abs(currentY) > 0.1){
           requestAnimationFrame(springBack);
         } else {
           currentX = 0; currentY = 0;
-          idWrapper.style.transform = '';
         }
       }
-      tiltTarget.rx = 0; tiltTarget.ry = 0;
       springBack();
-    });
+    }
+
+    window.addEventListener('mouseup', handleRelease);
 
     /* Touch drag support */
     idCard.addEventListener('touchstart', function(e){
@@ -286,28 +384,28 @@ tiltRAF = requestAnimationFrame(animateTilt);
       idCard.classList.add('dragging');
       dragStartX = t.clientX; dragStartY = t.clientY;
       wrapStartX = currentX;  wrapStartY = currentY;
+      lastX = t.clientX; lastY = t.clientY;
+      velX = 0; velY = 0;
     }, {passive:true});
+
     window.addEventListener('touchmove', function(e){
       if(!isDragging) return;
       var t = e.touches[0];
-      currentX = wrapStartX + (t.clientX - dragStartX);
-      currentY = wrapStartY + (t.clientY - dragStartY);
-      idWrapper.style.transform = 'translate(' + currentX + 'px,' + currentY + 'px)';
+
+      velX = t.clientX - lastX;
+      velY = t.clientY - lastY;
+
+      lastX = t.clientX;
+      lastY = t.clientY;
+
+      currentX = Math.max(-180, Math.min(180, wrapStartX + (t.clientX - dragStartX)));
+      currentY = Math.max(-150, Math.min(200, wrapStartY + (t.clientY - dragStartY)));
+
+      tiltTarget.ry = velX * 2.5;
+      tiltTarget.rx = -velY * 2.5;
     }, {passive:true});
-    window.addEventListener('touchend', function(){
-      if(!isDragging) return;
-      isDragging = false;
-      idCard.classList.remove('dragging');
-      tiltTarget.rx = 0; tiltTarget.ry = 0;
-      function snapBack(){
-        currentX = lerp(currentX, 0, 0.1);
-        currentY = lerp(currentY, 0, 0.1);
-        idWrapper.style.transform = 'translate(' + currentX.toFixed(2) + 'px,' + currentY.toFixed(2) + 'px)';
-        if(Math.abs(currentX) > 0.5 || Math.abs(currentY) > 0.5) requestAnimationFrame(snapBack);
-        else { currentX=0; currentY=0; idWrapper.style.transform=''; }
-      }
-      snapBack();
-    });
+
+    window.addEventListener('touchend', handleRelease);
   }
 
   /* ---------- PORTFOLIO TABS ---------- */
@@ -331,7 +429,6 @@ tiltRAF = requestAnimationFrame(animateTilt);
     var dialogLabel = document.getElementById('certDialogLabel');
     var dialogCopy = document.getElementById('certDialogCopy');
     var dialogFocus = document.getElementById('certDialogFocus');
-    var dialogMark = document.getElementById('certDialogMark');
     var dialogImage = document.getElementById('certDialogImage');
     var dialogOpen = document.getElementById('certDialogOpen');
 
@@ -346,10 +443,9 @@ tiltRAF = requestAnimationFrame(animateTilt);
       card.addEventListener('click', function(){
         certOrigin = card;
         dialogTitle.textContent = card.dataset.certTitle;
-        dialogLabel.textContent = 'certificate_' + card.dataset.certMark;
+        dialogLabel.textContent = card.dataset.certLabel;
         dialogCopy.textContent = card.dataset.certCopy;
         dialogFocus.textContent = card.dataset.certFocus;
-        dialogMark.textContent = card.dataset.certMark;
         dialogImage.src = card.dataset.certPng;
         dialogOpen.href = card.dataset.certPng;
         certDialog.hidden = false;
@@ -366,6 +462,55 @@ tiltRAF = requestAnimationFrame(animateTilt);
       if(e.key === 'Escape' && !certDialog.hidden) closeCertDialog();
     });
   }
+
+  /* ---------- SCROLL HANDSHAKE ---------- */
+var handshake = document.querySelector('.handshake-section');
+if(handshake && !reduceMotion){
+  var leftHand = handshake.querySelector('.hand-left');
+  var rightHand = handshake.querySelector('.hand-right');
+  var leftInner = leftHand.querySelector('.hand-inner');
+  var rightInner = rightHand.querySelector('.hand-inner');
+  var handshakeHeadline = handshake.querySelector('.contact-headline');
+  var handshakeHint = handshake.querySelector('.scroll-hint');
+  var handshakeSpark = handshake.querySelector('.spark');
+  var handshakeMet = false;
+  
+  function updateHandshake(){
+    var rect = handshake.getBoundingClientRect();
+    var total = rect.height - window.innerHeight;
+    var raw = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+    var eased = 1 - Math.pow(1 - raw, 3);
+    
+    // FIX: Increased multiplier from 152 to 195 to bring the hands together at the center
+    leftHand.style.transform = 'translate(' + (eased * 178 - 150) + '%, -50%) rotate(' + (eased * 8 - 8) + 'deg)';
+    rightHand.style.transform = 'translate(' + (150 - eased * 178) + '%, -50%) rotate(' + (8 - eased * 8) + 'deg)';
+    
+    var textT = Math.min(1, Math.max(0, (raw - .42) / .38));
+    handshakeHeadline.style.opacity = textT;
+    handshakeHeadline.style.transform = 'translate(-50%, ' + (16 - textT * 16) + 'px)';
+    
+    handshakeHint.style.opacity = Math.max(0, 1 - raw / .15);
+    
+    var sparkT = Math.min(1, Math.max(0, (raw - .82) / .18));
+    handshakeSpark.style.opacity = sparkT;
+    handshakeSpark.style.transform = 'translate(-50%, -50%) scale(' + (.65 + sparkT * .6) + ')';
+    
+    if(raw > .92 && !handshakeMet){ 
+      handshakeMet = true; 
+      leftInner.classList.add('shake'); 
+      rightInner.classList.add('shake'); 
+    }
+    if(raw < .85 && handshakeMet){ 
+      handshakeMet = false; 
+      leftInner.classList.remove('shake'); 
+      rightInner.classList.remove('shake'); 
+    }
+  }
+  
+  window.addEventListener('scroll', updateHandshake, {passive:true});
+  window.addEventListener('resize', updateHandshake);
+  updateHandshake();
+}
 
   /* ---------- CONTACT MAILTO FORM ---------- */
   var contactForm = document.getElementById('contactForm');
@@ -395,6 +540,16 @@ tiltRAF = requestAnimationFrame(animateTilt);
       var rect = card.getBoundingClientRect();
       card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
       card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+    card.addEventListener('click', function(e){
+      if(e.target.closest('a')) return;
+      var isOpen = card.classList.toggle('is-open');
+      card.setAttribute('aria-expanded', String(isOpen));
+    });
+    card.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      card.click();
     });
   });
 
